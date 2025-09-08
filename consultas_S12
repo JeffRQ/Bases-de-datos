@@ -1,0 +1,342 @@
+-- UNIVERSIDAD ESTATAL AMAZONICA
+-- REALIZADO POR: JORGE JEFFERSON RAMIREZ QUIMI
+
+create database TEIPROMETAL_4
+
+
+use TEIPROMETAL_4
+
+create table cliente (
+	ruc varchar (13) primary key,
+	nombres varchar (100) not null,
+	apellidos varchar (100)not null,
+	correo varchar (100),
+	telefono varchar (18),
+	direccion text 
+);
+
+
+create table venta (
+	id_venta int,
+	fecha datetime ,
+	total decimal (10,2) not null,
+	ruc_cliente varchar (13),
+	metodo_pago varchar (50),
+	estado varchar (30),
+	constraint venta_pk primary key (id_venta, ruc_cliente),
+	constraint venta_cliente_fk foreign key (ruc_cliente) references cliente (ruc)
+);
+
+create table detalleventa (
+	id_detalle int auto_increment,
+	id_venta int,
+	cod_producto int,
+	cantidad int not null,
+	prec_unit decimal (10,2) not null,
+	subtotal decimal (10,2) not null,
+	constraint detalleventa_pk primary key (id_detalle),
+	constraint detalleventa_venta_fk foreign key (id_venta) references venta (id_venta)
+);
+
+
+create table factura (
+	id_factura int not null auto_increment,
+	fecha_emision date not null,
+	tipo_comprobante varchar (30) not null,
+	observaciones text default null,
+	id_venta int,
+	constraint factura_pk primary key (id_factura),
+	key factura_venta_fk (id_venta),
+	constraint factura_venta_fk foreign key (id_venta) references venta (id_venta)
+);
+
+
+create table producto (
+	cod_producto int not null,
+	nombre varchar (200) not null,
+	descripcion text not null,
+	prec_unit decimal (10,2) not null,
+	stock_actual int not null,
+	primary key (cod_producto)
+	);
+
+
+create table sucursal (
+	id_sucursal int not null auto_increment,
+	nombre varchar (200) not null,
+	direccion text not null,
+	ciudad varchar (50) not null,
+	primary key (id_sucursal)
+);
+
+
+create table empleado (
+	id_empleado int auto_increment,
+	nombre varchar (200) not null,
+	cargo varchar (50) not null,
+	correo varchar (100) not null,
+	id_sucursal int ,
+	constraint empleado_pk primary key (id_empleado),
+	constraint empleado_sucursal_fk foreign key (id_sucursal) references sucursal (id_sucursal)
+);
+
+
+create table envio (
+	id_envio int not null auto_increment,
+	id_venta int,
+	direccion_entrega text not null,
+	fecha_envio varchar (30) not null,
+	empresa_transporte varchar (150) not null,
+	constraint envio_pk primary key (id_envio),
+	constraint envio_venta_fk foreign key (id_venta) references venta (id_venta)
+);
+
+-- ===============================================
+-- INSERTANDO DATOS DE EJEMPLO EN TEIPROMETAL_3
+-- ===============================================
+
+-- Tabla cliente
+select * from cliente
+
+INSERT INTO cliente (ruc, nombres, apellidos, correo, telefono, direccion) VALUES
+('0998765432101', 'Carlos', 'Pérez Gómez', 'carlos.perez@mail.com', '0987654321', 'Av. Quito y Bolívar'),
+('0912345678902', 'María', 'López Rivera', 'maria.lopez@mail.com', '0976543210', 'Calle Sucre 123'),
+('0987654321093', 'José', 'Ramírez Quimi', 'jose.ramirez@mail.com', '0965432109', 'Cdla. Amazonas, Casa 45');
+
+-- Tabla producto
+select * from producto
+
+INSERT INTO producto (cod_producto, nombre, descripcion, prec_unit, stock_actual) VALUES
+(1, 'Taladro Industrial', 'Taladro de impacto 1200W', 150.00, 50),
+(2, 'Soldadora MIG', 'Soldadora MIG para uso profesional', 450.00, 20),
+(3, 'Esmeril Angular', 'Esmeril angular 9 pulgadas', 80.00, 100);
+
+-- Tabla sucursal
+select * from sucursal
+
+INSERT INTO sucursal (nombre, direccion, ciudad) VALUES
+('Sucursal Quito', 'Av. Amazonas y Colón', 'Quito'),
+('Sucursal Guayaquil', 'Av. 9 de Octubre 1200', 'Guayaquil'),
+('Sucursal Cuenca', 'Av. Solano 500', 'Cuenca');
+
+-- Tabla empleado
+select * from empleado
+
+INSERT INTO empleado (nombre, cargo, correo, id_sucursal) VALUES
+('Luis Martínez', 'Vendedor', 'luis.martinez@mail.com', 1),
+('Ana Torres', 'Gerente de Sucursal', 'ana.torres@mail.com', 2),
+('Pedro Herrera', 'Técnico', 'pedro.herrera@mail.com', 3);
+
+-- Tabla venta (necesita cliente existente)
+select * from venta
+
+INSERT INTO venta (id_venta, fecha, total, ruc_cliente, metodo_pago, estado) VALUES
+(101, NOW(), 600.00, '0998765432101', 'Tarjeta de Crédito', 'Pagado'),
+(102, NOW(), 230.00, '0912345678902', 'Efectivo', 'Pendiente'),
+(103, NOW(), 450.00, '0987654321093', 'Transferencia', 'Pagado');
+
+-- Tabla detalleventa (relacionada con ventas y productos)
+select * from detalleventa
+
+INSERT INTO detalleventa (id_venta, cod_producto, cantidad, prec_unit, subtotal) VALUES
+(101, 1, 2, 150.00, 300.00),
+(101, 2, 1, 450.00, 450.00), -- subtotal es mayor al total de venta solo como ejemplo
+(102, 3, 2, 80.00, 160.00),
+(103, 2, 1, 450.00, 450.00);
+
+-- Tabla factura (relacionada con venta)
+select * from factura
+
+INSERT INTO factura (fecha_emision, tipo_comprobante, observaciones, id_venta) VALUES
+('2025-08-20', 'Factura', 'Venta de equipos eléctricos', 101),
+('2025-08-21', 'Factura', 'Venta de herramienta industrial', 102),
+('2025-08-22', 'Factura', 'Venta de soldadora MIG', 103);
+
+-- Tabla envio (relacionada con venta)
+select * from envio
+
+INSERT INTO envio (id_venta, direccion_entrega, fecha_envio, empresa_transporte) VALUES
+(101, 'Bodega central - Quito', '2025-08-23', 'Servientrega'),
+(102, 'Sucursal Sur - Guayaquil', '2025-08-24', 'TramacoExpress'),
+(103, 'Sucursal Norte - Cuenca', '2025-08-25', 'Cooperativa Transportes Cuenca');
+
+-- consulta 1
+
+SELECT v.id_venta, 
+       c.nombres AS NombreCliente, 
+       c.apellidos AS ApellidoCliente, 
+       v.fecha, 
+       v.total, 
+       v.metodo_pago, 
+       v.estado
+FROM venta v
+INNER JOIN cliente c ON v.ruc_cliente = c.ruc;
+
+-- consulta 2
+
+SELECT v.id_venta, 
+       c.nombres AS Cliente, 
+       p.nombre AS Producto, 
+       dv.cantidad, 
+       dv.prec_unit, 
+       dv.subtotal
+FROM detalleventa dv
+INNER JOIN venta v ON dv.id_venta = v.id_venta
+INNER JOIN cliente c ON v.ruc_cliente = c.ruc
+INNER JOIN producto p ON dv.cod_producto = p.cod_producto;
+
+
+SELECT AVG(prec_unit) AS promedio_precio
+FROM producto
+WHERE prec_unit > 20;
+
+-- Semana 11
+
+-- consulta 1
+
+SELECT 
+  v.id_venta,
+  v.fecha,
+  CONCAT(c.nombres, ' ', c.apellidos) AS cliente,
+  v.total,
+  v.metodo_pago,
+  v.estado
+FROM venta v
+JOIN cliente c ON c.ruc = v.ruc_cliente
+ORDER BY v.fecha DESC;
+
+-- consulta 2
+
+SELECT 
+  f.id_factura,
+  f.fecha_emision,
+  v.id_venta,
+  CONCAT(c.nombres, ' ', c.apellidos) AS cliente,
+  SUM(dv.subtotal)                          AS subtotal,
+  ROUND(SUM(dv.subtotal) * 0.12, 2)         AS iva_12,
+  ROUND(SUM(dv.subtotal) * 1.12, 2)         AS total_con_iva
+FROM factura f
+JOIN venta v         ON v.id_venta  = f.id_venta
+JOIN cliente c       ON c.ruc       = v.ruc_cliente
+JOIN detalleventa dv ON dv.id_venta = v.id_venta
+GROUP BY f.id_factura, f.fecha_emision, v.id_venta, cliente
+ORDER BY f.fecha_emision DESC;
+
+
+-- consulta 3
+
+SELECT 
+  p.cod_producto,
+  p.nombre AS producto,
+  SUM(dv.cantidad) AS unidades_vendidas,
+  ROUND(SUM(dv.subtotal), 2) AS ingreso_estimado
+FROM detalleventa dv
+JOIN producto p ON p.cod_producto = dv.cod_producto
+GROUP BY p.cod_producto, p.nombre
+ORDER BY unidades_vendidas DESC
+LIMIT 5;
+
+-- consulta 4
+
+SELECT 
+  DATE_FORMAT(v.fecha, '%Y-%m') AS periodo,
+  COUNT(*)                      AS nro_ventas,
+  ROUND(SUM(v.total), 2)        AS ingresos
+FROM venta v
+WHERE v.estado = 'Pagado'
+GROUP BY DATE_FORMAT(v.fecha, '%Y-%m')
+ORDER BY periodo DESC;
+
+
+-- foro
+
+-- Venta de prueba (ajusta ruc_cliente existente)
+INSERT INTO venta (id_venta, fecha, total, ruc_cliente, metodo_pago, estado)
+VALUES (2001, NOW(), 300.00, '0998765432101', 'Efectivo', 'Pagado');
+
+-- Ítem de prueba (ajusta cod_producto existente)
+INSERT INTO detalleventa (id_venta, cod_producto, cantidad, prec_unit, subtotal)
+VALUES (2001, 1, 2, 150.00, 300.00);
+
+
+-- foro
+
+-- Cierre de caja diario por método de pago (solo ventas Pagadas)
+SELECT 
+    DATE(v.fecha)                                        AS fecha,
+    v.metodo_pago,
+    COUNT(DISTINCT v.id_venta)                           AS nro_ventas,
+    COUNT(dv.id_detalle)                                 AS items_vendidos,
+    ROUND(SUM(dv.subtotal), 2)                           AS subtotal,
+    ROUND(SUM(dv.subtotal) * 0.12, 2)                    AS iva_12,
+    ROUND(SUM(dv.subtotal) * 1.12, 2)                    AS total_con_iva
+FROM venta AS v
+JOIN detalleventa AS dv 
+      ON dv.id_venta = v.id_venta
+WHERE DATE(v.fecha) = '2025-08-30'
+  AND v.estado = 'Pagado'
+GROUP BY DATE(v.fecha), v.metodo_pago
+WITH ROLLUP;
+
+-- foro 2
+
+SELECT 
+  e.id_envio,
+  v.id_venta,
+  DATE(v.fecha)                              AS fecha_venta,
+  e.fecha_envio,
+  CONCAT(c.nombres, ' ', c.apellidos)        AS cliente,
+  v.metodo_pago,
+  v.estado                                   AS estado_venta,
+  e.empresa_transporte,
+  e.direccion_entrega,
+  SUM(dv.cantidad)                           AS items_enviados,
+  ROUND(SUM(dv.subtotal), 2)                 AS valor_mercaderia
+FROM envio AS e
+INNER JOIN venta         AS v  ON v.id_venta   = e.id_venta
+INNER JOIN cliente       AS c  ON c.ruc        = v.ruc_cliente
+INNER JOIN detalleventa  AS dv ON dv.id_venta  = v.id_venta
+GROUP BY 
+  e.id_envio, v.id_venta, fecha_venta, e.fecha_envio,
+  cliente, v.metodo_pago, estado_venta, e.empresa_transporte, e.direccion_entrega
+ORDER BY e.fecha_envio, e.id_envio;
+
+
+-- UNIVERSIDAD ESTATAL AMAZONICA
+-- JORGE JEFFERSON RAMIREZ QUIMI
+-- SEMANA 12
+
+-- Consulta 1
+-- Función de agregado 1: SUM()
+
+SELECT v.ruc_cliente,
+       CONCAT(c.nombres, ' ', c.apellidos) AS cliente,
+       SUM(v.total) AS total_compras
+FROM venta v
+JOIN cliente c ON v.ruc_cliente = c.ruc
+WHERE v.estado = 'Pagado'
+GROUP BY v.ruc_cliente, cliente
+ORDER BY total_compras DESC;
+
+-- Consulta 2
+-- Función de agregado 2: AVG()
+
+SELECT AVG(prec_unit) AS precio_promedio
+FROM producto;
+
+-- Subconsulta
+
+SELECT p.cod_producto, 
+       p.nombre, 
+       p.prec_unit
+FROM producto p
+WHERE p.prec_unit > (
+    SELECT AVG(prec_unit) 
+    FROM producto
+);
+
+-- Foro: Semana 12
+
+SELECT SUM(total) AS ingresos_totales
+FROM venta
+WHERE estado = 'Pagado';
